@@ -7,6 +7,6 @@
     "react-dom": "^19.2.0"
   },
   "devDependencies": {
-    "typescript": "7.0.2"
+    "typescript": "7.1.0-dev.20261102.1"
   }
 }
