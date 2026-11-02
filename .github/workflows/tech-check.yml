@@ -1,0 +1,60 @@
+name: Tech check
+
+# Checks every direct dependency of this code repository against the tech
+# stack positive list in the documentation repository (idc365-decisions
+# `tech check`). Fails the build on an unapproved package, a version outside
+# its range, an unapproved BOM or base image, or a version younger than the
+# cooldown without a CVE exemption.
+#
+# Production: install the CLI from GitHub Packages (`npm install -g
+# @idconnectdk/idc365-decisions` with a read:packages token) and give it a
+# read-only token for the documentation repository as IDC365_DECISIONS_TOKEN.
+# This test repository builds the CLI from the documentation repository's
+# main instead, because no package is published in the test organisation.
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  tech-check:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: This repository, with history (for release resolution)
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: CLI from the documentation repository's main
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: dkmaker-xyz/docs-flow-lab
+          ref: main
+          path: .idc365-cli
+          sparse-checkout: cli
+          persist-credentials: false
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "24"
+
+      - name: Build the CLI
+        working-directory: .idc365-cli/cli
+        run: npm ci && npm run build
+
+      - name: Tech check
+        env:
+          # The documentation repository is public in the test organisation.
+          IDC365_DECISIONS_TOKEN: ${{ github.token }}
+        run: |
+          set +e
+          node .idc365-cli/cli/dist/index.js tech check > "$RUNNER_TEMP/tech.md"
+          code=$?
+          set -e
+          cat "$RUNNER_TEMP/tech.md" | tee -a "$GITHUB_STEP_SUMMARY"
+          node .idc365-cli/cli/dist/index.js tech check --json --no-cooldown > "$RUNNER_TEMP/tech.json" || true
+          exit "$code"
