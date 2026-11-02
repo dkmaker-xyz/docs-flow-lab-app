@@ -4,5 +4,5 @@ WORKDIR /app
 COPY . .
 RUN npm ci && npm run build
 
-FROM nginx:1.29-alpine
+FROM python:3.13-slim
 COPY --from=build /app/dist /usr/share/nginx/html
