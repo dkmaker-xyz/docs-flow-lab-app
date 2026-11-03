@@ -1,0 +1,15 @@
+{
+  "extraKnownMarketplaces": {
+    "idc365-decisions": {
+      "source": {
+        "source": "github",
+        "repo": "dkmaker-xyz/docs-flow-lab",
+        "ref": "meta/plugin"
+      },
+      "autoUpdate": true
+    }
+  },
+  "enabledPlugins": {
+    "idc365-decisions@idc365-decisions": true
+  }
+}
